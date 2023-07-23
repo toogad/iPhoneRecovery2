@@ -14,11 +14,12 @@ def filepath_check(file_path):
         res += '/'
     return res
 
+
 work_dir = input("Enter the full work directory:")
 work_dir = filepath_check(work_dir)
 
-#TODO: check input
-backup_dir_by_Apple = input('Enter the full backup directory where the Manifest.db is stored, ending with "/":')
+backup_dir_by_Apple = input('Enter the full backup directory where the Manifest.db is stored:')
+backup_dir_by_Apple = filepath_check(backup_dir_by_Apple)
 
 conn = sqlite3.connect(backup_dir_by_Apple + 'Manifest.db')
 query = "SELECT * FROM Files"
