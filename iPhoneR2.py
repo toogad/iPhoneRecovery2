@@ -5,8 +5,19 @@ import sqlite3
 import subprocess
 
 
+def filepath_check(file_path):
+    search = subprocess.run(['find', "/Users/kaiz", '-type', 'd', '-name', file_path], stdout=subprocess.PIPE)
+    print('Search result:', search.stdout)
+    print('Search error:', search.stderr)
+    res = search.stdout.decode('utf-8')[:-1]
+    if res != '' and file_path[-1] != '/':
+        res = res + '/'
+        print("Corrected:", res)
+    return res
+
 #TODO: if this work_dir doesn't exist, prompt to creat?
 work_dir = input("Enter the full work directory, ending with '/':")
+work_dir = filepath_check(work_dir)
 
 #TODO: check input
 backup_dir_by_Apple = input('Enter the full backup directory where the Manifest.db is stored, ending with "/":')
