@@ -9,13 +9,12 @@ from os.path import exists
 def filepath_check(file_path):
     res = file_path
     while not exists(res):
-        res = input("Path does NOT exist. Please re-enter with a valid existing directory.")
+        res = input("Path does NOT exist. Please re-enter with a valid existing directory: ")
     if res[-1] != '/':
         res += '/'
     return res
 
-#TODO: if this work_dir doesn't exist, prompt to creat?
-work_dir = input("Enter the full work directory, ending with '/':")
+work_dir = input("Enter the full work directory:")
 work_dir = filepath_check(work_dir)
 
 #TODO: check input
