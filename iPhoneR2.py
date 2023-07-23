@@ -3,16 +3,15 @@
 import pandas as pd
 import sqlite3
 import subprocess
+from os.path import exists
 
 
 def filepath_check(file_path):
-    search = subprocess.run(['find', "/Users/kaiz", '-type', 'd', '-name', file_path], stdout=subprocess.PIPE)
-    print('Search result:', search.stdout)
-    print('Search error:', search.stderr)
-    res = search.stdout.decode('utf-8')[:-1]
-    if res != '' and file_path[-1] != '/':
-        res = res + '/'
-        print("Corrected:", res)
+    res = file_path
+    while not exists(res):
+        res = input("Path does NOT exist. Please re-enter with a valid existing directory.")
+    if res[-1] != '/':
+        res += '/'
     return res
 
 #TODO: if this work_dir doesn't exist, prompt to creat?
