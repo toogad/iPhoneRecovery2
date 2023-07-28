@@ -42,12 +42,13 @@ df['keep'] = to_keep
 df_filtered = df[ df['keep'] == True ].sort_values(by='fileID').reset_index(drop=True)
 df_filtered.to_csv(work_dir + 'filtered.csv')
 
-#TODO: allow user input for the subfolder_init
-subfolder_init = "00008*"
-backup_subfolder_search = subprocess.run(["find", backup_dir_by_Apple, "-type", "d", "-name", subfolder_init],
+backup_subfolder_search = subprocess.run(["find", backup_dir_by_Apple, "-type", "d", "-name", "*"],
                                          stdout=subprocess.PIPE)
-subfolder = backup_subfolder_search.stdout.decode('utf-8')[:-1].split('/')[-1]
-print(subfolder)
+subfolder = [s.split('/')[-1] for s in backup_subfolder_search.stdout.decode('utf-8').split('\n')][1:-1]
+print("List of subfolders: ", subfolder)
+
+
+subfolder_init = input('Enter the first few characters that distinguish the target folder: ')
 
 backupPath = []
 recoveredName = []
