@@ -11,7 +11,7 @@ def filepath_check(file_path, folder_type='work'):
     i = 0
     while not exists(res):
         if i == 0:
-            prompt = 'Enter the full ' + folder_type + ' directory:' 
+            prompt = 'Enter the full path to the ' + folder_type + ' directory:'
         else:
             prompt = 'Path does NOT exist. Please re-enter with a valid existing directory: '
         res = input(prompt)
@@ -21,24 +21,30 @@ def filepath_check(file_path, folder_type='work'):
     return res
 
 
-work_dir = filepath_check('', 'work')
+def folder_search(base, sub, start):
+    search = subprocess.run(["find", base, "-type", "d", "-name", sub], stdout=subprocess.PIPE)
+    return [s.split('/')[-1] for s in search.stdout.decode('utf-8').split('\n')][start:-1]
+
+
+work_dir = filepath_check('', 'full work')
 
 backup_dir_by_Apple = filepath_check('', "Apple's /MobileSync/backup/")
-backup_subfolder_search = subprocess.run(["find", backup_dir_by_Apple, "-type", "d", "-name", "*"],
-                                         stdout=subprocess.PIPE)
-backup_subfolders = [s.split('/')[-1] for s in backup_subfolder_search.stdout.decode('utf-8').split('\n')][1:-1]
+backup_subfolders = folder_search(backup_dir_by_Apple, "*", 1)
 print("List of found subfolders within Apple's backup collection: ", backup_subfolders)
 
-target_subfolder = []
-while len(target_subfolder) != 1:
+target_subfolder = ''
+while target_subfolder == '':
     target_subfolder_init = input('Enter the first few characters that distinguish the target folder: ')
-    target_subfolder_search = subprocess.run(["find", backup_dir_by_Apple, "-type", "d", "-name", target_subfolder_init],
-                                                stdout=subprocess.PIPE)
-    target_subfolder = [s.split('/')[-1] for s in target_subfolder_search.stdout.decode('utf-8').split('\n')][1:-1]
-
+    id = [k for k in range(len(backup_subfolders)) if target_subfolder_init in backup_subfolders[k]]
+    if len(id) == 1:
+        target_subfolder = backup_subfolders[0]
+    else:
+        print('Wrong subfolder name initials... Please retry.')
+        target_subfolder = ''
 print("Selected TARGET subfolder: ", target_subfolder)
 
-conn = sqlite3.connect(backup_dir_by_Apple + 'Manifest.db')
+
+conn = sqlite3.connect(backup_dir_by_Apple + target_subfolder + '/Manifest.db')
 query = "SELECT * FROM Files"
 df = pd.read_sql_query(query, conn)
 print(df.columns)
@@ -63,7 +69,7 @@ backupPath = []
 recoveredName = []
 for id in df_filtered.index:
     backup_file_id = str(df_filtered['fileID'][id])
-    backup_mainfolder = backup_dir_by_Apple + str(target_subfoler) + '/' + str(df_filtered['fileID'][id])[:2]
+    backup_mainfolder = backup_dir_by_Apple + str(target_subfolder) + '/' + str(df_filtered['fileID'][id])[:2]
     backup_path_search = subprocess.run(["find", backup_mainfolder, "-name", backup_file_id], stdout=subprocess.PIPE)
     backup_path = backup_path_search.stdout.decode('utf-8')[:-1]
     recovered_filename = df_filtered['relativePath'][id].replace('/', '_')
@@ -73,10 +79,9 @@ df_filtered['backupPath'] = backupPath
 df_filtered['recoveredName'] = recoveredName
 df_filtered.to_csv(work_dir + 'extraction_map.csv')
 
-#TODO: check and repeat if needed
-recover_subfolder = input("Enter the file recovery subfoler in the work directory:")
+recover_subfolder = filepath_check('', 'recovered file subfolder')
 
-recover_dir = work_dir + recover_subfolder
+recover_dir = recover_subfolder
 mk_dir = subprocess.run(["mkdir", recover_dir])
 print(mk_dir.stdout)
 for id in df_filtered.index:
